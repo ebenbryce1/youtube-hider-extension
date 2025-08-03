@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Extension Options</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .setting-box {
+      background-color: #1c1c1c;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .setting-box h5 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .setting-subtitle {
+      font-size: 0.9rem;
+      color: #aaa;
+      text-align: center;
+    }
+
+    .slider-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    input[type="range"] {
+      width: 150px;
+    }
+
+    .slider-symbol {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="setting-box">
+    <h5>YouTube Duration Filter</h5>
+    <p class="setting-subtitle">Hide videos shorter than</p>
+    <div class="slider-container">
+      <label for="minDuration">Duration (minutes):</label>
+      <input type="range" id="minDuration" min="0" max="15" step="1" value="2">
+      <span id="minDuration-value">2</span><span class="slider-symbol">m</span>
+    </div>
+  </div>
+
+  <script>
+    const slider = document.getElementById("minDuration");
+    const valueDisplay = document.getElementById("minDuration-value");
+
+    chrome.storage.sync.get(["minVideoDuration"], (data) => {
+      const value = data.minVideoDuration ?? 2;
+      slider.value = value;
+      valueDisplay.textContent = value;
+    });
+
+    slider.addEventListener("input", () => {
+      const val = parseInt(slider.value, 10);
+      valueDisplay.textContent = val;
+      chrome.storage.sync.set({ minVideoDuration: val });
+    });
+  </script>
+</body>
+</html>
