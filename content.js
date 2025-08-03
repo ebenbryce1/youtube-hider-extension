@@ -14,7 +14,7 @@ const prefs = {
   viewsHideSearchEnabled: true,
   viewsHideSubsEnabled: true,
   viewsHideCorrEnabled: true,
-  //shorts
+  // shorts
   hideShortsEnabled: true,
   hideShortsSearchEnabled: false,
 };
@@ -47,14 +47,11 @@ const prefs = {
 function skipIntro() {
   if (!prefs.skipEnabled) return;
 
-  const netflixBtn = document.querySelector(
-    "button[data-uia='player-skip-intro']"
-  );
+  const netflixBtn = document.querySelector("button[data-uia='player-skip-intro']");
   const primeBtn = document.querySelector('[class*="skipelement-button"]');
   const recapBtn =
-    document.querySelector(
-      "button[data-uia='viewer-skip-recap'], button[data-uia='player-skip-recap']"
-    ) || document.querySelector('[class*="skip-recap"], [class*="SkipRecap"]');
+    document.querySelector("button[data-uia='viewer-skip-recap'], button[data-uia='player-skip-recap']") ||
+    document.querySelector('[class*="skip-recap"], [class*="SkipRecap"]');
 
   const btn = netflixBtn || primeBtn || recapBtn;
   if (!btn) return;
@@ -68,34 +65,24 @@ function skipIntro() {
 function hideWatched() {
   const { hideThreshold } = prefs;
 
-  document
-    .querySelectorAll(
-      'ytd-thumbnail-overlay-resume-playback-renderer #progress, .ytThumbnailOverlayProgressBarHostWatchedProgressBarSegment'
-    )
+  document.querySelectorAll('ytd-thumbnail-overlay-resume-playback-renderer #progress, .ytThumbnailOverlayProgressBarHostWatchedProgressBarSegment')
     .forEach(bar => {
       const pct = parseFloat(bar.style.width) || 0;
       if (pct <= hideThreshold) return;
 
       let item = bar;
-
       while (
         item &&
-        !item.matches(
-          'ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-video-renderer, yt-lockup-view-model'
-        )
+        !item.matches('ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-video-renderer, yt-lockup-view-model')
       ) {
         item = item.parentElement;
       }
-      if (!item) return;
-
-      item.style.display = 'none';
+      if (item) item.style.display = 'none';
     });
 }
 
 function extractNumberAndSuffix(input) {
   const s = String(input).trim();
-
-  // matching number + optional suffix, case insensitive
   const match = s.match(/^([\d.,]+)\s*(K|Mln|M|B)?/i);
   if (!match) return { numStr: '', suffix: '' };
   return {
@@ -111,49 +98,18 @@ function parseToNumber(input) {
   let multiplier = 1;
   switch (suffix.toLowerCase()) {
     case 'k':
-      numStr.includes('.') ? (multiplier = 1e2) : (multiplier = 1e3);
+      multiplier = numStr.includes('.') ? 1e2 : 1e3;
       break;
     case 'm':
     case 'mln':
-      numStr.includes('.') ? (multiplier = 1e5) : (multiplier = 1e6);
+      multiplier = numStr.includes('.') ? 1e5 : 1e6;
       break;
     case 'b':
-      numStr.includes('.') ? (multiplier = 1e8) : (multiplier = 1e9);
+      multiplier = numStr.includes('.') ? 1e8 : 1e9;
       break;
   }
-  function parseDuration(text) {
-  const parts = text.trim().split(":").map(Number);
-  if (parts.length === 3)
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2)
-    return parts[0] * 60 + parts[1];
-  return 0;
-}
 
-function hideByDuration() {
-  chrome.storage.sync.get(["durationThreshold"], data => {
-    const maxSec = (data.durationThreshold || 0) * 60;
-    if (maxSec <= 0) return;
-
-    document.querySelectorAll("ytd-thumbnail").forEach(thumb => {
-      const label = thumb.querySelector("span.ytd-thumbnail-overlay-time-status-renderer");
-      if (!label) return;
-      const dur = parseDuration(label.textContent);
-      if (dur > maxSec) {
-        const container = thumb.closest("ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer");
-        if (container)
-          container.style.display = "none";
-      }
-    });
-  });
-}
-
-
-
-  const normalized = numStr.replace(/\./g, '').replace(',', '.');
-
-  const base = parseFloat(normalized);
-  return isNaN(base) ? NaN : base * multiplier;
+  return parseFloat(numStr.replace(/,/g, '')) * multiplier;
 }
 
 function hideUnderVisuals() {
@@ -163,123 +119,75 @@ function hideUnderVisuals() {
     const span = metaLine.querySelector('span.inline-metadata-item');
     if (!span) return;
 
-    const text = span.textContent;
-    const views = parseToNumber(text);
-
+    const views = parseToNumber(span.textContent);
     if (isNaN(views) || views >= viewsHideThreshold) return;
 
     let item = span;
     while (
       item &&
-      !item.matches(
-        'ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-video-renderer, yt-lockup-view-model'
-      )
+      !item.matches('ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-video-renderer, yt-lockup-view-model')
     ) {
       item = item.parentElement;
     }
     if (item) item.style.display = 'none';
   });
 
-  document
-    .querySelectorAll('yt-content-metadata-view-model')
-    .forEach(metadataContainer => {
-      const metadataRows = metadataContainer.querySelectorAll(
-        '.yt-content-metadata-view-model-wiz__metadata-row'
-      );
-      if (metadataRows.length < 2) return;
+  document.querySelectorAll('yt-content-metadata-view-model').forEach(metadataContainer => {
+    const metadataRows = metadataContainer.querySelectorAll('.yt-content-metadata-view-model-wiz__metadata-row');
+    if (metadataRows.length < 2) return;
 
-      const viewsRow = metadataRows[1];
-      const viewsSpan = viewsRow.querySelector(
-        'span.yt-core-attributed-string'
-      );
+    const viewsSpan = metadataRows[1].querySelector('span.yt-core-attributed-string');
+    if (!viewsSpan) return;
 
-      if (!viewsSpan) return;
+    const views = parseToNumber(viewsSpan.textContent);
+    if (isNaN(views) || views >= viewsHideThreshold) return;
 
-      const text = viewsSpan.textContent;
-      const views = parseToNumber(text);
-
-      if (isNaN(views) || views >= viewsHideThreshold) return;
-
-      let item = viewsSpan;
-      while (
-        item &&
-        !item.matches(
-          'ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-video-renderer, yt-lockup-view-model'
-        )
-      ) {
-        item = item.parentElement;
-      }
-      if (item) item.style.display = 'none';
-    });
+    let item = viewsSpan;
+    while (
+      item &&
+      !item.matches('ytd-compact-video-renderer, ytd-rich-item-renderer, ytd-video-renderer, yt-lockup-view-model')
+    ) {
+      item = item.parentElement;
+    }
+    if (item) item.style.display = 'none';
+  });
 }
 
 function hideShorts() {
-  document
-    .querySelectorAll(
-      'ytd-guide-section-renderer, tp-yt-paper-item, ytd-video-renderer, ytd-reel-shelf-renderer'
-    )
-    .forEach(node => {
-      if (node.querySelector('ytm-shorts-lockup-view-model')) {
-        node.style.display = 'none';
-      }
-      if (
-        node.querySelector('badge-shape[aria-label="Shorts"]') ||
-        node.querySelector(
-          'ytd-thumbnail-overlay-time-status-renderer[overlay-style="SHORTS"]'
-        )
-      ) {
-        node.style.display = 'none';
-      }
-    });
+  document.querySelectorAll(
+    'ytd-guide-section-renderer, tp-yt-paper-item, ytd-video-renderer, ytd-reel-shelf-renderer'
+  ).forEach(node => {
+    if (
+      node.querySelector('ytm-shorts-lockup-view-model') ||
+      node.querySelector('badge-shape[aria-label="Shorts"]') ||
+      node.querySelector('ytd-thumbnail-overlay-time-status-renderer[overlay-style="SHORTS"]')
+    ) {
+      node.style.display = 'none';
+    }
+  });
 
   document.querySelectorAll('a[href^="/shorts/"]').forEach(link => {
     const shelf = link.closest('ytd-rich-shelf-renderer');
-    if (shelf) {
-      shelf.style.display = 'none';
-      return;
-    }
+    if (shelf) shelf.style.display = 'none';
     const item = link.closest('ytd-rich-item-renderer');
     if (item) item.style.display = 'none';
   });
 
-  document.querySelectorAll('a[title="Shorts"]').forEach(link => {
+  document.querySelectorAll('a[title="Shorts"], yt-formatted-string[title="Shorts"]').forEach(link => {
     const entry =
       link.closest('ytd-guide-entry-renderer') ||
-      link.closest('ytd-mini-guide-entry-renderer');
+      link.closest('ytd-mini-guide-entry-renderer') ||
+      link.closest('yt-chip-cloud-chip-renderer');
     if (entry) entry.style.display = 'none';
   });
 
-  document.querySelectorAll('a[title="Shorts"]').forEach(link => {
-    const entry = link.closest('ytd-guide-entry-renderer');
-    if (entry) entry.style.display = 'none';
+  document.querySelectorAll('yt-tab-shape[tab-title="Shorts"]').forEach(link => {
+    link.style.display = 'none';
   });
 
-  document
-    .querySelectorAll('yt-formatted-string[title="Shorts"]')
-    .forEach(link => {
-      const entry = link.closest('yt-chip-cloud-chip-renderer');
-      if (entry) entry.style.display = 'none';
-    });
-
-  document
-    .querySelectorAll('yt-tab-shape[tab-title="Shorts"]')
-    .forEach(link => {
-      link.style.display = 'none';
-    });
-
-  document.querySelectorAll('grid-shelf-view-model').forEach(node => {
-    if (node.querySelector('ytm-shorts-lockup-view-model-v2')) {
-      node.style.display = 'none';
-    }
+  document.querySelectorAll('grid-shelf-view-model, grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2)').forEach(node => {
+    node.style.display = 'none';
   });
-
-  document
-    .querySelectorAll(
-      'grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2)'
-    )
-    .forEach(node => {
-      node.style.display = 'none';
-    });
 
   document.querySelectorAll('yt-chip-cloud-chip-renderer').forEach(node => {
     const label = node.querySelector('.ytChipShapeChip');
@@ -331,12 +239,44 @@ function startHiding() {
   }
 }
 
+function parseDuration(durationText) {
+  const parts = durationText.split(":").map(Number);
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  } else if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  } else {
+    return 0;
+  }
+}
+
+function hideShortVideos() {
+  chrome.storage.sync.get(["minVideoDuration"], (data) => {
+    const minSeconds = (data.minVideoDuration || 0) * 60;
+
+    document.querySelectorAll("ytd-thumbnail").forEach((thumb) => {
+      const timeLabel = thumb.querySelector("span.ytd-thumbnail-overlay-time-status-renderer");
+      if (!timeLabel) return;
+
+      const timeText = timeLabel.textContent.trim();
+      const durationInSec = parseDuration(timeText);
+
+      if (durationInSec < minSeconds) {
+        const parent = thumb.closest("ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer");
+        if (parent) parent.style.display = "none";
+      }
+    });
+  });
+}
+
 function onMutations() {
   skipIntro();
   startHiding();
+  hideShortVideos(); // include here
 }
 
 onMutations();
 
+// Only one MutationObserver — calls both features
 const observer = new MutationObserver(onMutations);
 observer.observe(document.body, { childList: true, subtree: true });

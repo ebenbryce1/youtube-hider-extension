@@ -200,3 +200,18 @@ document.addEventListener('DOMContentLoaded', () => {
     ...Object.values(cfg.shorts.boxes),
   ].forEach(box => box.addEventListener('change', saveSettings));
 });
+
+const slider = document.getElementById("minDuration");
+const valueDisplay = document.getElementById("minDuration-value");
+
+chrome.storage.sync.get(["minVideoDuration"], (data) => {
+    const value = data.minVideoDuration ?? 2;
+    slider.value = value;
+    valueDisplay.textContent = value;
+});
+
+slider.addEventListener("input", () => {
+    const val = parseInt(slider.value, 10);
+    valueDisplay.textContent = val;
+    chrome.storage.sync.set({ minVideoDuration: val });
+});

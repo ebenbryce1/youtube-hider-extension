@@ -151,3 +151,29 @@ header {
     width: 120px;
     margin-top: 30px;
 }
+.setting-box {
+    background-color: #1c1c1c;
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.setting-subtitle {
+    font-size: 0.9rem;
+    color: #aaa;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.slider-symbol {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+input[type="range"] {
+    width: 100px;
+}
