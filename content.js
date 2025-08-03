@@ -121,6 +121,34 @@ function parseToNumber(input) {
       numStr.includes('.') ? (multiplier = 1e8) : (multiplier = 1e9);
       break;
   }
+  function parseDuration(text) {
+  const parts = text.trim().split(":").map(Number);
+  if (parts.length === 3)
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2)
+    return parts[0] * 60 + parts[1];
+  return 0;
+}
+
+function hideByDuration() {
+  chrome.storage.sync.get(["durationThreshold"], data => {
+    const maxSec = (data.durationThreshold || 0) * 60;
+    if (maxSec <= 0) return;
+
+    document.querySelectorAll("ytd-thumbnail").forEach(thumb => {
+      const label = thumb.querySelector("span.ytd-thumbnail-overlay-time-status-renderer");
+      if (!label) return;
+      const dur = parseDuration(label.textContent);
+      if (dur > maxSec) {
+        const container = thumb.closest("ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer");
+        if (container)
+          container.style.display = "none";
+      }
+    });
+  });
+}
+
+
 
   const normalized = numStr.replace(/\./g, '').replace(',', '.');
 
