@@ -269,6 +269,8 @@ function hideShortVideos() {
   });
 }
 
+
+
 function onMutations() {
   skipIntro();
   startHiding();
@@ -280,3 +282,31 @@ onMutations();
 // Only one MutationObserver — calls both features
 const observer = new MutationObserver(onMutations);
 observer.observe(document.body, { childList: true, subtree: true });
+
+function autoScrollIfGapsExist() {
+  const gapThreshold = 200; // pixel height of empty space to detect
+
+  const container = document.querySelector('ytd-rich-grid-renderer #contents');
+  if (!container) return;
+
+  const lastVisibleCard = Array.from(container.children).reverse().find(el => el.offsetHeight > 0);
+  if (!lastVisibleCard) return;
+
+  const bottomOfLastCard = lastVisibleCard.getBoundingClientRect().bottom;
+  const windowHeight = window.innerHeight;
+
+  if (bottomOfLastCard < windowHeight + gapThreshold) {
+    window.scrollBy(0, 1000); // Scroll down to load more
+    setTimeout(() => autoScrollIfGapsExist(), 1000); // Wait for videos to load
+  }
+}
+
+// Observe DOM changes (when YouTube loads more videos)
+const observer2 = new MutationObserver(() => {
+  autoScrollIfGapsExist();
+});
+
+observer2.observe(document.body, { childList: true, subtree: true });
+
+// Initial trigger
+setTimeout(autoScrollIfGapsExist, 1500);
